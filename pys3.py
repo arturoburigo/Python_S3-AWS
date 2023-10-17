@@ -10,8 +10,8 @@ TRANSIENT_BUCKET_NAME = 'arturo-bucket02'
 F1 = 'arturo1.txt'
 F2 = 'arturo2.txt'
 F3 = 'arturo3.txt'
-Dir = 'C:\\Users\\6123508\\OneDrive - Thomson Reuters Incorporated\\Documents\\aws'
-Dwn_dir = 'C:\\Users\\6123508\\OneDrive - Thomson Reuters Incorporated\\Documents\\awsDownload'
+Dir = ''
+Dwn_dir = ''
 
 
 def upload_file(bucket, directory, file, s3, s3path=None):
