@@ -10,8 +10,8 @@ TRANSIENT_BUCKET_NAME = 'arturo-bucket02'
 F1 = 'arturo1.txt'
 F2 = 'arturo2.txt'
 F3 = 'arturo3.txt'
-Dir = ''
-Dwn_dir = ''
+Dir = '/Users/arturoburigo/projects/aws'
+Dwn_dir = '/Users/arturoburigo/projects/aws/aws-download'
 
 
 def upload_file(bucket, directory, file, s3, s3path=None):
@@ -45,7 +45,7 @@ def delete_files(bucket, keys, s3):
 
 def list_objects(bucket, s3):
     try:
-        response = s3.meta.client.list_obkects(Bucket=bucket)
+        response = s3.meta.client.list_objects(Bucket=bucket)
         objects = []
         for content in response['Contents']:
             objects.append((content['Key']))
@@ -55,7 +55,7 @@ def list_objects(bucket, s3):
         print('error', ce)
 
 
-def copy_file(source_bucket, destination_bucket, source_key, destination_key,s3):
+def copy_file(source_bucket, destination_bucket, source_key, destination_key, s3):
     try:
         source = {
             'Bucket': source_bucket,
@@ -65,20 +65,47 @@ def copy_file(source_bucket, destination_bucket, source_key, destination_key,s3)
     except ClientError as ce:
         print('error', ce)
 
+
+def generate_download_file(bucket, key, expiration_time, s3):
+    try:
+        response = s3.meta.client.generate_presigned_url('get_object',
+                                                         Params={'Bucket': bucket,
+                                                                 "Key": key}, ExpiresIn=expiration_time)
+        print(response)
+    except ClientError as ce:
+        print('error', ce)
+
+
+def delete_bucket(bucket, s3):
+    try:
+        s3.Bucket(bucket).delete()
+    except ClientError as ce:
+        print('error', ce)
+
+
 def main():
     access = os.getenv(ACESS_KEY)
     secret = os.getenv(SECRET_KEY)
+    print(access, secret)
     s3 = boto3.resource('s3', aws_access_key_id=access, aws_secret_access_key=secret)
-    print(s3.ServiceResource)
 
-    # createBucket(PRI_BUCKET_NAME, s3)
+    createBucket(PRI_BUCKET_NAME, s3)
 
     upload_file(PRI_BUCKET_NAME, Dir, F1, s3)
     upload_file(PRI_BUCKET_NAME, Dir, F2, s3)
     upload_file(PRI_BUCKET_NAME, Dir, F3, s3)
 
-    download_file(PRI_BUCKET_NAME, Dwn_dir, F3, F3, s3)
-    delete_files(PRI_BUCKET_NAME, [F1, F2, F3], s3)
+    createBucket(TRANSIENT_BUCKET_NAME, s3)
+    copy_file(source_bucket=PRI_BUCKET_NAME, destination_bucket=TRANSIENT_BUCKET_NAME, source_key=F2,
+              destination_key=F2, s3=s3)
+
+    list_objects(TRANSIENT_BUCKET_NAME, s3)
+    delete_files(TRANSIENT_BUCKET_NAME, [F2], s3)
+    delete_bucket(TRANSIENT_BUCKET_NAME, s3)
+    # generate_download_file(TRANSIENT_BUCKET_NAME, F2, 40, s3)
+
+    # download_file(PRI_BUCKET_NAME, Dwn_dir, F3, F3, s3)
+    # delete_files(PRI_BUCKET_NAME, [F1, F2], s3)
 
 
 def createBucket(name, s3):
